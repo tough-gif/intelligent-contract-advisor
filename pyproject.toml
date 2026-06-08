@@ -1,0 +1,26 @@
+[project]
+name = "contract-advisor"
+version = "0.1.0"
+description = "Intelligent Contract Advisor built with Google ADK"
+readme = "README.md"
+requires-python = ">=3.12,<4"
+dependencies = [
+    "google-adk (>=1.31.0,<2.0.0)",
+    "google-cloud-storage",
+    "google-genai>=1.56.0",
+    "python-dotenv",
+    "pypdf>=4.0.0",
+    "python-docx>=1.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "python-multipart>=0.0.6",
+    "absl-py>=2.4.0",
+    "gradio>=6.14.0",
+    "requests>=2.34.2",
+    "google-auth>=2.53.0",
+    "fpdf2>=2.8.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
