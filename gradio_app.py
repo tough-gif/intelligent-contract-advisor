@@ -10,9 +10,17 @@ from dotenv import load_dotenv
 print("--- Starting Gradio App v17 ---")
 load_dotenv(override=True)
 
-PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "ai-ml-learning-xwf")
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT")
+if not PROJECT_ID:
+    raise ValueError("GOOGLE_CLOUD_PROJECT environment variable is not set in .env")
 LOCATION = os.getenv("GOOGLE_CLOUD_LOCATION", "us-central1")
-AGENT_RESOURCE_NAME = f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/1152282138595295232"
+AGENT_RESOURCE_ID = os.getenv("AGENT_RESOURCE_ID")
+if not AGENT_RESOURCE_ID:
+    raise ValueError("AGENT_RESOURCE_ID environment variable is not set in .env")
+AGENT_RESOURCE_NAME = f"projects/{PROJECT_ID}/locations/{LOCATION}/reasoningEngines/{AGENT_RESOURCE_ID}"
+
+
+
 
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 
