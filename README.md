@@ -79,6 +79,49 @@ Use the provided deployment script to push the agent to Vertex AI:
 uv run python deployment/deploy.py --create
 ```
 
+## Deploying the Frontend (Gradio App) to Cloud Run
+
+The frontend Gradio app (`gradio_app.py`) can be deployed to **Google Cloud Run**.
+
+### Prerequisites
+
+1.  The backend agent must already be deployed to Vertex AI Reasoning Engine (see steps above).
+2.  Ensure your `.env` file is configured with the correct `AGENT_RESOURCE_ID`.
+3.  **Permissions**: The default Compute Engine service account (`[PROJECT_NUMBER]-compute@developer.gserviceaccount.com`) requires:
+    *   **Storage Object Admin** (or Creator) on the `CONTRACT_BUCKET_NAME` bucket to allow users to upload files via UI.
+    *   **Vertex AI User** (`roles/aiplatform.user`) to call the backend agent.
+
+### Deployment Steps
+
+We provide a helper script `deploy_frontend.sh` to simplify deployment.
+
+1.  **Build and Push the Container Image:**
+    Create the Artifact Registry repository and build the container image using Cloud Build:
+    ```bash
+    # Create repository (only needed once)
+    gcloud artifacts repositories create contract-advisor-repo \
+        --repository-format=docker \
+        --location=us-central1 \
+        --description="Docker repository for Contract Advisor" \
+        --project=YOUR_PROJECT_ID
+
+    # Build and push the image
+    gcloud builds submit \
+        --tag us-central1-docker.pkg.dev/YOUR_PROJECT_ID/contract-advisor-repo/gradio-app:latest \
+        --project=YOUR_PROJECT_ID
+    ```
+
+2.  **Deploy using the script:**
+    Edit `deploy_frontend.sh` to ensure `PROJECT_ID`, `REGION`, and `AGENT_RESOURCE_ID` match your environment, then run:
+    ```bash
+    bash deploy_frontend.sh
+    ```
+
+    *Note: If the deployment fails at the "Setting IAM Policy" step, it means your account lacks permission to make the service public. The deployment is still successful, but the service is private. You can access it locally using:*
+    ```bash
+    gcloud run services proxy contract-advisor-frontend --project=YOUR_PROJECT_ID --region=us-central1
+    ```
+
 ## Usage
 
 The advisor supports two ways to access contracts:
