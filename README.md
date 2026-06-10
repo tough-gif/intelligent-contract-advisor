@@ -92,6 +92,7 @@ The frontend Gradio app (`gradio_app.py`) can be deployed to **Google Cloud Run*
     *   **Vertex AI User** (`roles/aiplatform.user`) to call the backend agent.
 
 ### Deployment Steps
+All commands below must be executed from the root of the agent directory (`python/agents/contract-advisor5/`). 
 
 We provide a helper script `deploy_frontend.sh` to simplify deployment.
 
