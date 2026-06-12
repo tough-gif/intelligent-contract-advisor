@@ -6,6 +6,7 @@ import base64
 import tempfile
 from fpdf import FPDF
 from dotenv import load_dotenv
+import re
 
 print("--- Starting Gradio App v17 ---")
 load_dotenv(override=True)
@@ -46,7 +47,24 @@ def create_pdf(text):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("helvetica", size=12)
-    clean_text = text.replace("#", "").replace("*", "").replace("`", "")
+    
+    # Clean up markdown and replace unicode characters that Helvetica (Latin-1) doesn't support
+    replacements = {
+        "–": "-",  # en-dash (\u2013)
+        "—": "-",  # em-dash (\u2014)
+        "“": '"',  # smart double quotes
+        "”": '"',
+        "‘": "'",  # smart single quotes
+        "’": "'",
+        "•": "*",  # bullet points
+        "#": "",   # markdown headers
+        "*": "",   # markdown bold/italic
+        "`": "",   # markdown code
+    }
+    clean_text = text
+    for old, new in replacements.items():
+        clean_text = clean_text.replace(old, new)
+        
     pdf.multi_cell(0, 10, clean_text)
     temp_path = os.path.join(tempfile.gettempdir(), "analysis_report.pdf")
     pdf.output(temp_path)
@@ -88,9 +106,10 @@ def analyze(message, files):
                 for p in p_list:
                     if "text" in p: text_chunk += p["text"]
             full_text += text_chunk
-            if "### Executive Summary" in full_text:
+            match = re.search(r"##+\s+Executive\s+Summary", full_text, re.IGNORECASE)
+            if match:
                 report_started = True
-                clean_report_text = full_text[full_text.find("### Executive Summary"):]
+                clean_report_text = full_text[match.start():]
             elif any(marker in full_text for marker in ["Contracting Parties:", "Finding:", "SUCCESS: Loaded"]):
                 clean_report_text = "*🔍 The Advisor is reviewing your contract... please wait.*"
             else:
@@ -109,13 +128,18 @@ def analyze(message, files):
         print(f"❌ SDK Query Error: {e}")
         yield f"Error: {e}", pdf_html, None, gr.update()
 
+def load_sample_contract():
+    return ["sample_test_data/CTR-2026-001_NDA_Detailed.pdf"], "Analyze this contract."
+
 # UI Layout with Tabs (Standard Theme)
 with gr.Blocks(title="Intelligent Contract Advisor") as demo:
     gr.Markdown("# Intelligent Contract Advisor")
     
+    
     with gr.Row():
         with gr.Column(scale=1):
             file_in = gr.File(label="Upload Contract", file_count="multiple")
+            btn_sample = gr.Button("📁 Load Sample Contract", variant="secondary", size="sm")
             text_in = gr.Textbox(label="Instructions", placeholder="e.g. Analyze the contract")
             btn = gr.Button("🚀 Run Analysis", variant="primary")
         
@@ -128,6 +152,7 @@ with gr.Blocks(title="Intelligent Contract Advisor") as demo:
                 with gr.Tab("📄 Document Preview"):
                     pdf_view = gr.HTML()
 
+    btn_sample.click(fn=load_sample_contract, outputs=[file_in, text_in])
     btn.click(fn=analyze, inputs=[text_in, file_in], outputs=[out, pdf_view, pdf_download, text_in])
 
 if __name__ == "__main__":

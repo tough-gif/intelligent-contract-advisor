@@ -1,6 +1,8 @@
 # Use Python 3.12 slim image
 FROM python:3.12-slim
 
+ENV PYTHONUNBUFFERED=1
+
 # Install uv for fast dependency installation
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
@@ -12,6 +14,7 @@ COPY pyproject.toml uv.lock ./
 
 # Copy application code
 COPY contract_advisor/ ./contract_advisor/
+COPY sample_test_data/ ./sample_test_data/
 COPY README.md ./
 
 # Install dependencies (system-wide for simplicity in container)
